@@ -7,7 +7,7 @@ if __name__ == "__main__":
     useradmin = 'teste'
     controller = LoginController(root,DB_CONFIG) 
 
-    #controller = CadastroUsuarioController(root) 
+    #controller = CadastroCategoriaController(root) 
     root.mainloop()
 
 #root,useradmin

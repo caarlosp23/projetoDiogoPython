@@ -21,17 +21,18 @@ class CategoriaTransacao:
         self.db_manager = DatabaseManager()  
 
     def carregar_categorias(self):
-        nomes_categorias = ['teste']
+        categorias = []
         try:
             if self.db_manager.conectar():
                 cursor = self.db_manager.conn.cursor()
-                cursor.execute("SELECT Nome FROM CategoriaTransacao")
-                categorias = [row.Nome for row in cursor.fetchall()]
+                cursor.execute("selecT idcategoriatransacao, descricao from Tbl_CategoriaTransacao")
+                rows = cursor.fetchall()
+                categorias = [{'idcategoriatransacao': row.idcategoriatransacao, 'descricao': row.descricao} for row in rows]
         except Exception as e:
             print(f"Erro ao carregar categorias: {e}")
         finally:
-            self.db_manager.desconectar()
-        categorias = [CategoriaTransacao(nome) for nome in nomes_categorias]
+                self.db_manager.desconectar()
+
         return categorias
 
 class Transacao:

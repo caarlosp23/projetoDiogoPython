@@ -6,6 +6,7 @@ from tkinter import messagebox
 from dataBase import *
 import tkinter as tk
 
+
 class LoginController:
     def __init__(self, root, db_config):
         self.view = LoginView(root)
@@ -21,7 +22,8 @@ class LoginController:
 
         if self.validar_usuario(usuario, senha):
              self.abrir_telaPrincipal(usuario)
-             self.view.root.quit()
+             self.view.root.destroy()
+             
             # O login foi bem-sucedido, você pode redirecionar para a próxima tela ou realizar outras ações aqui
             
         else:
@@ -40,6 +42,7 @@ class LoginController:
             messagebox.showerror("Erro de Login", "Credenciais incorretas. Verifique seu usuário e senha.")
 
     def abrir_telaPrincipal(self, nome_usuario):
+        self.view.root.withdraw() 
         # Em vez de criar uma nova janela com tk.Tk(), crie o controlador da tela principal na janela existente
         self.tela_principal_controller = TelaPrincipalController(self.view.root, nome_usuario)
 
@@ -72,15 +75,13 @@ class LoginController:
         self.tela_principal = TelaPrincipalView(root,nome_usuario)  # Crie a Tela Principal
         root.mainloop() # Crie a Tela Principal
     
-    def fechar_projeto(self):
-        self.view.root.quit()
+    # def fechar_projeto(self):
+    #     self.view.root.quit()
         
-        
-        
-
 class TelaPrincipalController:
     def __init__(self, root, nome_usuario):
         self.view = TelaPrincipalView(root, nome_usuario)
+        self.view.controller = self
         
     #def listar_topEntrada(self):
     #def listar_topSaida(self):
@@ -88,16 +89,35 @@ class TelaPrincipalController:
     #def totalizarSaldoContaPeriodo(self):
     #def totalEntradaPeriodo(self):
     #def totalSaidaPeriodo(self):
+
+    def __init__(self, root):
+        self.view = CadastroCategoriaView(root)
+
+    
+    
        
 class CadastroCategoriaController:
     def __init__(self, root):
         self.view = CadastroCategoriaView(root)
-        #self.view.botao_cadastrar.config(command=self.cadastrar_categoria)
+        self.categoria_transacao = CategoriaTransacao("Nome da Categoria")
+        categorias = self.categoria_transacao.carregar_categorias()
+        self.view.exibir_categorias(categorias)
+        # #self.view.botao_cadastrar.config(command=self.cadastrar_categoria)
         
-        #self.view.botao_cadastrar.config(command=self.cadastrar_categoria)
-        self.categoria_model = CategoriaTransacao('teste')
-        #self.carregar_categorias()  # Carregar as categorias ao inicializar
+        # #self.view.botao_cadastrar.config(command=self.cadastrar_categoria)
+        # self.categoria_model = CategoriaTransacao('teste')
+        # #self.carregar_categorias()  # Carregar as categorias ao inicializar
+        # self.cadastro_view.exibir_categorias(self.categoria_transacao.carregar_categorias())
 
+        # self.categoria_transacao = CategoriaTransacao("Nome da Categoria")
+        # # Crie uma instância da classe CadastroCategoriaView
+        # self.cadastro_view = CadastroCategoriaView(root)
+        # # Carregue as categorias do banco de dados usando a instância de CategoriaTransacao
+        # categorias = self.categoria_transacao.carregar_categorias()
+        # # Exiba as categorias na TreeView
+        # self.cadastro_view.exibir_categorias(categorias)
+
+    
     def carregar_categorias(self):
         categorias = self.categoria_model.carregar_categorias()
         self.view.exibir_categorias(categorias)
@@ -112,8 +132,8 @@ class CadastroCategoriaController:
 class CadastroTransacaoController:
     def __init__(self, root):
         self.view = CadastroTransacaoView(root)
-        self.view.botao_cadastrar.config(command=self.cadastrar_transacao)
-
+        
+  
     #def listar_transacao(self):
     #def cadastrar_transacao(self):
     #def atualizar_transacao(self):
@@ -128,8 +148,7 @@ class CadastroContaController:
     #def cadastrar_conta(self):
     #def atualizar_conta(self):
     #def excluir_conta(self):
-        
-
+    
 class CadastroUsuarioController:
     def __init__(self, root):
         self.view = CadastroUsuarioView(root)

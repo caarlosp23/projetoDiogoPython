@@ -1,6 +1,9 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 from tkinter import PhotoImage
+from tkinter import ttk
+from controller import *
+
 
 class LoginView:
     def __init__(self, root):
@@ -63,7 +66,6 @@ class LoginView:
             self.login_entry.insert(0, "Usuário")
             self.login_entry.configure(fg="gray")
         
-
 class TelaPrincipalView:
     def __init__(self, root, nome_usuario):
         self.root = root
@@ -71,6 +73,10 @@ class TelaPrincipalView:
         self.root.configure(bg="#008BD6")
         self.create_widgets(nome_usuario)
         self.center_window(900,570)
+        self.root.protocol("WM_DELETE_WINDOW", self.fechar_projeto)
+        
+    def fechar_projeto(self):
+        self.root.quit()
 
     def create_widgets(self, nome_usuario):
         white_rectangle = tk.Canvas(self.root, bg="#FFFFFF", width=900, height=465)
@@ -80,20 +86,25 @@ class TelaPrincipalView:
         lbl_bemvindo = tk.Label(self.root, text=f"BEM VINDO, {nome_usuario}", font=("Helvetica", 20), bg="#008BD6", fg="white")
         lbl_bemvindo.place(relx=0.17, rely=0.12, anchor="center")
 
-        cadastrar_dropdown = tk.Menubutton(self.root, text="Cadastrar", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        cadastrar_dropdown = tk.Menubutton(self.root, text="CADASTRAR", font=("Helvetica", 12), bg="#008BD6", fg="white")
         cadastrar_dropdown.place(relx=0.75, rely=0.12, anchor="center")
 
         cadastrar_menu = tk.Menu(cadastrar_dropdown)
         cadastrar_dropdown.configure(menu=cadastrar_menu)
-
-        # Adicione as opções do menu
-        opcoes_cadastro = ["Categoria", "Conta", "Usuário"]
+  
+        opcoes_cadastro = ["CATEGORIA", "CONTA", "USUÁRIO"]
         for opcao in opcoes_cadastro:
             cadastrar_menu.add_command(label=opcao, command=lambda o=opcao: self.abrir_cadastro(o))
+
+    
 
        
         btn_financeiro = tk.Menubutton(self.root, text="TRANSAÇÕES", font=("Helvetica", 12), bg="#008BD6", fg="white")
         btn_financeiro.place(relx=0.90, rely=0.12, anchor="center")
+       
+        menu = tk.Menu(btn_financeiro, tearoff=0)
+        menu.add_command(label="Cadastrar Transação", command=self.abrir_transacao)
+        btn_financeiro.config(menu=menu)
 
         label_periodo = tk.Label(self.root, text="PERÍODO", font=("Helvetica", 16), bg="#FFFFFF" ,fg="black")
         label_periodo.place(relx=0.05, rely=0.28, anchor="w")
@@ -139,25 +150,29 @@ class TelaPrincipalView:
         self.lbl_SaidaValor.place(relx=0.80, rely=0.35, anchor="w")
 
     def abrir_cadastro(self, opcao):
-        if opcao == "Categoria":
+        if opcao == "CATEGORIA":
             # Implemente a lógica para abrir a tela de cadastro de categorias
             categoria_window = tk.Toplevel(self.root)
             categoria_window.title("Cadastro de Categoria")
-        # Inicialize o controlador da tela de cadastro de categoria
             CadastroCategoriaView(categoria_window)
-
-            print("Abrir Tela de Cadastro de Categoria")
-        elif opcao == "Conta":
+        # Inicialize o controlador da tela de cadastro de categoria
+        elif opcao == "CONTA":
             categoria_window = tk.Toplevel(self.root)
             CadastroContaView(categoria_window)
             # Implemente a lógica para abrir a tela de cadastro de contas
-            print("Abrir Tela de Cadastro de Conta")
-        elif opcao == "Usuário":
+         
+        elif opcao == "USUÁRIO":
 
             categoria_window = tk.Toplevel(self.root)
             CadastroUsuarioView(categoria_window)
             # Implemente a lógica para abrir a tela de cadastro de usuários
-            print("Abrir Tela de Cadastro de Usuário")
+            
+    
+
+    def abrir_transacao(self):
+        transacao_window = tk.Toplevel(self.root)
+        transacao_window.title("Transações")
+        CadastroTransacaoView(transacao_window)
 
     def atualizar_saldo(self):
         # Aqui você pode implementar a lógica para atualizar o saldo
@@ -182,6 +197,76 @@ class CadastroCategoriaView:
     def __init__(self, root):
         self.root = root
         self.root.title("Cadastro de Categoria")
+        self.root.configure(bg="#008BD6")
+        self.center_window(900, 570)
+        self.create_widgets()
+        
+    
+
+    def exibir_janela(self):
+        categoria_window = tk.Toplevel(self.root)
+        categoria_window.title("Cadastro de Categoria")
+
+    def center_window(self, width, height):
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+
+    def create_widgets(self):
+        white_rectangle = tk.Canvas(self.root, bg="#FFFFFF", width=900, height=465)
+        white_rectangle.place(relx=0, rely=1, anchor="sw")
+        
+        ret_cinza = tk.Canvas(self.root, bg="#D9D9D9", width=390, height=425)
+        ret_cinza.place(relx=0.03, rely=0.22, anchor="nw")
+        
+        lbl_cadCategoria = tk.Label(self.root, text=f"CADASTRO DE CATEGORIA", font=("Helvetica", 20), bg="#008BD6", fg="white")
+        lbl_cadCategoria.place(relx=0.5, rely=0.10, anchor="center")
+        
+        entry_categoria = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        entry_categoria.place(relx=0.7, rely=0.25, anchor="w")
+
+        lbl_cadCategoria = tk.Label(self.root, text=f"CATEGORIA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
+        lbl_cadCategoria.place(relx=0.58, rely=0.25, anchor="w")
+
+        btn_salvar = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        btn_salvar.place(relx=0.64, rely=0.35, anchor="w")
+
+    # Botão Atualizar
+        btn_atualizar = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        btn_atualizar.place(relx=0.71, rely=0.35, anchor="w")
+
+    # Botão Excluir
+        btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        btn_excluir.place(relx=0.80, rely=0.35, anchor="w")
+
+        self.tree = ttk.Treeview(self.root, columns=("idcategoriatransacao", "Categoria"), show="headings")
+        self.tree.heading("idcategoriatransacao", text="ID")
+        self.tree.heading("Categoria", text="Categoria")
+        self.tree.place(relx=0.03, rely=0.22, anchor="nw", width=390, height=425)
+
+        self.tree.tag_configure("center", anchor="center")
+
+# Aplicar a tag "center" às colunas
+        # self.tree.heading("idcategoriatransacao", text="ID Categoria", anchor="center")
+        # self.tree.heading("Categoria", text="Categoria", anchor="center")
+
+        self.tree.column("idcategoriatransacao", width=30)
+        self.tree.column("Categoria", width=250)
+    
+    def exibir_categorias(self, categorias):
+    # Limpar qualquer conteúdo anterior no retângulo cinza
+        self.tree.delete(*self.tree.get_children())
+        for categoria in categorias:
+        # Insira uma tupla contendo o ID e a descrição
+            self.tree.insert("", "end", values=(categoria['idcategoriatransacao'], categoria['descricao']))
+
+
+class CadastroTransacaoView:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Cadastro de Transação")
         self.root.configure(bg="#008BD6")
         self.center_window(900, 570)
         self.create_widgets()
@@ -220,22 +305,6 @@ class CadastroCategoriaView:
         btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
         btn_excluir.place(relx=0.80, rely=0.35, anchor="w")
     
-    def exibir_categorias(self, categorias):
-    # Limpar qualquer conteúdo anterior no retângulo cinza
-        for widget in self.ret_cinza.winfo_children():
-            widget.destroy()
-
-    # Criar Labels para exibir as categorias
-        for i, categoria in enumerate(categorias):
-            label_categoria = tk.Label(self.ret_cinza, text=categoria, font=("Helvetica", 12), bg="#D9D9D9", fg="black")
-            label_categoria.place(relx=0.1, rely=0.1 + i * 0.1, anchor="w")
-
-class CadastroTransacaoView:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Cadastro de Transação")
-       
-
 class CadastroContaView:
     def __init__(self, root):
         self.root = root
@@ -291,7 +360,6 @@ class CadastroContaView:
         btn_excluirConta = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
         btn_excluirConta.place(relx=0.80, rely=0.55, anchor="w")
         
-
 class CadastroUsuarioView:
     def __init__(self, root):
         self.root = root
