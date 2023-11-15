@@ -92,42 +92,77 @@ class TelaPrincipalController:
 
     def __init__(self, root):
         self.view = CadastroCategoriaView(root)
-
-    
-    
-       
+      
 class CadastroCategoriaController:
     def __init__(self, root):
         self.view = CadastroCategoriaView(root)
         self.categoria_transacao = CategoriaTransacao("Nome da Categoria")
         categorias = self.categoria_transacao.carregar_categorias()
         self.view.exibir_categorias(categorias)
-        # #self.view.botao_cadastrar.config(command=self.cadastrar_categoria)
-        
-        # #self.view.botao_cadastrar.config(command=self.cadastrar_categoria)
-        # self.categoria_model = CategoriaTransacao('teste')
-        # #self.carregar_categorias()  # Carregar as categorias ao inicializar
-        # self.cadastro_view.exibir_categorias(self.categoria_transacao.carregar_categorias())
+        self.view.btn_salvar.config(command = self.cadastrar_categoria)
+        self.view.btn_excluir.config(command = self.excluir_categoriaController)
+        self.view.btn_atualizar.config(command = self.atualizar_categoria)
+        self.view.tree.bind("<ButtonRelease-1>", self.exibir_descricao_selecionada)
 
-        # self.categoria_transacao = CategoriaTransacao("Nome da Categoria")
-        # # Crie uma instância da classe CadastroCategoriaView
-        # self.cadastro_view = CadastroCategoriaView(root)
-        # # Carregue as categorias do banco de dados usando a instância de CategoriaTransacao
-        # categorias = self.categoria_transacao.carregar_categorias()
-        # # Exiba as categorias na TreeView
-        # self.cadastro_view.exibir_categorias(categorias)
-
-    
     def carregar_categorias(self):
-        categorias = self.categoria_model.carregar_categorias()
+        categorias = self.categoria_transacao.carregar_categorias()
         self.view.exibir_categorias(categorias)
 
-  
+    def cadastrar_categoria(self):
+        descricao = self.view.entry_categoria.get().strip()  # Obter descrição da categoria e remover espaços em branco
+        if descricao:  # Verificar se a descrição não é vazia
+            if not self.categoria_transacao.existe_categoria(descricao):  # Verificar se a categoria já existe
+                self.categoria_transacao.inserir_categoria(descricao)
+                self.carregar_categorias()
+                # Exibir messagebox de sucesso
+                messagebox.showinfo("Sucesso", "Categoria salva com sucesso!")
+                self.view.entry_categoria.delete("0", "end")  # Limpar o Entry após salvar
+            else:
+                # Exibir messagebox de erro se a categoria já existir
+                messagebox.showerror("Erro", "Esta categoria já existe.")
+        else:
+            # Exibir messagebox de erro se a descrição estiver vazia
+            messagebox.showerror("Erro", "A descrição da categoria não pode ser vazia.")
 
-    #def listar_categoria(self):
-    #def cadastrar_categoria(self):
-    #def atualizar_categoria(self):
-    #def excluir_categoria(self):
+    def excluir_categoriaController(self):
+        id_categoria = self.view.obter_id_selecionado()
+
+        # Verificar se um item está selecionado
+        if id_categoria:
+            # Perguntar ao usuário se tem certeza
+            resposta = messagebox.askyesno("Confirmação", "Tem certeza que deseja excluir esta categoria?")
+            if resposta:
+                self.categoria_transacao.excluir_categoria(id_categoria)
+                self.carregar_categorias()
+                # Exibir messagebox de sucesso
+                messagebox.showinfo("Sucesso", "Categoria excluída com sucesso!")
+        else:
+            # Nenhum item selecionado, exiba uma mensagem de aviso
+            messagebox.showwarning("Aviso", "Selecione uma categoria para excluir.")
+
+    def atualizar_categoria(self):
+        id_categoria = self.view.obter_id_selecionado()
+        nova_descricao = self.view.entry_categoria.get()
+
+        # Verifica se a descrição não está vazia antes de prosseguir
+        if nova_descricao.strip() == "":
+            messagebox.showwarning("Aviso", "A descrição não pode estar vazia.")
+            return
+
+        self.categoria_transacao.atualizar_categoria(id_categoria, nova_descricao)
+        self.carregar_categorias()
+
+        # Exibe uma mensagem de sucesso
+        messagebox.showinfo("Sucesso", "Categoria atualizada com sucesso!")
+
+    def exibir_descricao_selecionada(self, event):
+        # Função chamada quando um item na Treeview é clicado
+        item_selecionado = self.view.tree.selection()
+        if item_selecionado:
+            # Obtém a descrição do item selecionado e a exibe no entry
+            descricao = self.view.tree.item(item_selecionado)['values'][1]
+            self.view.entry_categoria.delete(0, tk.END)  # Limpa o entry
+            self.view.entry_categoria.insert(0, descricao)  # Insere a descrição no entry
         
 class CadastroTransacaoController:
     def __init__(self, root):
@@ -142,12 +177,34 @@ class CadastroTransacaoController:
 class CadastroContaController:
     def __init__(self, root):
         self.view = CadastroContaView(root)
-        #self.view.botao_cadastrar.config(command=self.cadastrar_conta)
+        self.contaFinanceira = ContaFinanceira("nome","saldo","usuario","datacriacao")
+        contas = self.contaFinanceira.carregar_contas()
+        self.view.exibir_contas(contas)
 
-    #def listar_conta(self):    
-    #def cadastrar_conta(self):
-    #def atualizar_conta(self):
-    #def excluir_conta(self):
+
+        self.view.btn_salvarConta.config(command = self.salvar_conta)
+        self.view.btn_excluirConta.config(command = self.excluir_conta)
+        self.view.btn_atualizarConta.config(command = self.atualizar_conta)
+
+    def carregar_contas(self):
+        contas = self.contaFinanceira.carregar_contas()
+        self.view.exibir_contas(contas)
+    
+    def salvar_conta(self):
+        # Chamar método do model para salvar a conta
+        nome = self.view.entry_Conta.get()
+        saldo = self.view.entry_ContaSaldo.get()
+        descricao = self.view.entry_ContaDesc.get()
+        
+        self.contaFinanceira.inserir_conta(nome, saldo, descricao,1)  # Substitua 1 pelo ID do usuário
+
+    def atualizar_conta(self, id_conta, nome_conta, saldo, descricao, data_criacao):
+        # Chamar método do model para atualizar a conta
+        self.contaFinanceira.atualizar_conta(id_conta, nome_conta, saldo, descricao, data_criacao, usuario_id=1)  # Substitua 1 pelo ID do usuário
+    
+    def excluir_conta(self, id_conta):
+        # Chamar método do model para excluir a conta
+        self.model.excluir_conta(id_conta)
     
 class CadastroUsuarioController:
     def __init__(self, root):

@@ -5,9 +5,9 @@ if __name__ == "__main__":
 
     root = tk.Tk()
     useradmin = 'teste'
-    controller = LoginController(root,DB_CONFIG) 
+    #controller = LoginController(root,DB_CONFIG) 
 
-    #controller = CadastroCategoriaController(root) 
+    controller = CadastroContaController(root) 
     root.mainloop()
 
 #root,useradmin

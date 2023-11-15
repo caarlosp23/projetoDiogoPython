@@ -3,6 +3,7 @@ from PIL import Image, ImageTk, ImageDraw
 from tkinter import PhotoImage
 from tkinter import ttk
 from controller import *
+from model import CategoriaTransacao
 
 
 class LoginView:
@@ -200,8 +201,6 @@ class CadastroCategoriaView:
         self.root.configure(bg="#008BD6")
         self.center_window(900, 570)
         self.create_widgets()
-        
-    
 
     def exibir_janela(self):
         categoria_window = tk.Toplevel(self.root)
@@ -224,22 +223,22 @@ class CadastroCategoriaView:
         lbl_cadCategoria = tk.Label(self.root, text=f"CADASTRO DE CATEGORIA", font=("Helvetica", 20), bg="#008BD6", fg="white")
         lbl_cadCategoria.place(relx=0.5, rely=0.10, anchor="center")
         
-        entry_categoria = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
-        entry_categoria.place(relx=0.7, rely=0.25, anchor="w")
+        self.entry_categoria = tk.Entry(self.root, font=("Helvetica", 12),width=15 ,highlightthickness=1, highlightbackground="black")
+        self.entry_categoria.place(relx=0.7, rely=0.25, anchor="w")
 
         lbl_cadCategoria = tk.Label(self.root, text=f"CATEGORIA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadCategoria.place(relx=0.58, rely=0.25, anchor="w")
 
-        btn_salvar = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_salvar.place(relx=0.64, rely=0.35, anchor="w")
+        self.btn_salvar = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white",command=self.salvar_categoria)
+        self.btn_salvar.place(relx=0.64, rely=0.35, anchor="w")
 
     # Botão Atualizar
-        btn_atualizar = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_atualizar.place(relx=0.71, rely=0.35, anchor="w")
+        self.btn_atualizar = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white", command=self.atualizar_categoria)
+        self.btn_atualizar.place(relx=0.71, rely=0.35, anchor="w")
 
     # Botão Excluir
-        btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_excluir.place(relx=0.80, rely=0.35, anchor="w")
+        self.btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white", command=self.excluir_categoria)
+        self.btn_excluir.place(relx=0.80, rely=0.35, anchor="w")
 
         self.tree = ttk.Treeview(self.root, columns=("idcategoriatransacao", "Categoria"), show="headings")
         self.tree.heading("idcategoriatransacao", text="ID")
@@ -261,7 +260,34 @@ class CadastroCategoriaView:
         for categoria in categorias:
         # Insira uma tupla contendo o ID e a descrição
             self.tree.insert("", "end", values=(categoria['idcategoriatransacao'], categoria['descricao']))
+    
+    def salvar_categoria(self):
+        # Lógica para obter dados do Entry e chamar a stored procedure de inserção
+        descricao = self.entry_categoria.get()  # Obter descrição da categoria
+        self.categoria_transacao.inserir_categoria(descricao)
+        self.atualizar_lista_categorias()
+        
+    
+    def atualizar_lista_categorias(self):
+        # Lógica para obter dados da tabela e exibir na Treeview
+        categorias = self.categoria_service.obter_todas_categorias()
+        self.exibir_categorias(categorias)
 
+    def atualizar_categoria(self):
+    # Lógica para obter dados do Entry e chamar a stored procedure de atualização
+        self.categoria_transacao.atualizar_categoria()
+        self.atualizar_lista_categorias()
+
+    def excluir_categoria(self):
+        # Lógica para obter dados do Entry e chamar a stored procedure de exclusão
+        self.categoria_transacao.excluir_categoriaController()
+        self.atualizar_lista_categorias()
+    
+    def obter_id_selecionado(self):
+        item_selecionado = self.tree.selection()
+        if item_selecionado:
+            return self.tree.item(item_selecionado)['values'][0]
+        return None
 
 class CadastroTransacaoView:
     def __init__(self, root):
@@ -322,6 +348,7 @@ class CadastroContaView:
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
     def create_widgets(self):
+
         white_rectangle = tk.Canvas(self.root, bg="#FFFFFF", width=900, height=465)
         white_rectangle.place(relx=0, rely=1, anchor="sw")
         
@@ -334,32 +361,146 @@ class CadastroContaView:
         lbl_cadConta = tk.Label(self.root, text=f"CONTA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadConta.place(relx=0.58, rely=0.25, anchor="w") 
 
-        entry_Conta = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
-        entry_Conta.place(relx=0.75, rely=0.25, anchor="w")
+        self.entry_Conta = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        self.entry_Conta.place(relx=0.75, rely=0.25, anchor="w")
 
         lbl_cadSaldo = tk.Label(self.root, text=f"SALDO INICIAL", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadSaldo.place(relx=0.58, rely=0.35, anchor="w") 
         
-        entry_ContaSaldo = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
-        entry_ContaSaldo.place(relx=0.75, rely=0.35, anchor="w")
+        self.entry_ContaSaldo = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        self.entry_ContaSaldo.place(relx=0.75, rely=0.35, anchor="w")
 
         lbl_cadDesc = tk.Label(self.root, text=f"DESCRIÇÃO", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadDesc.place(relx=0.58, rely=0.45, anchor="w") 
         
-        entry_ContaDesc = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
-        entry_ContaDesc.place(relx=0.75, rely=0.45, anchor="w")
+        self.entry_ContaDesc = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        self.entry_ContaDesc.place(relx=0.75, rely=0.45, anchor="w")
 
-        btn_salvarConta = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_salvarConta.place(relx=0.64, rely=0.55, anchor="w")
+        self.btn_salvarConta = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white",command=self.salvar_conta)
+        self.btn_salvarConta.place(relx=0.64, rely=0.55, anchor="w")
 
     # Botão Atualizar
-        btn_atualizarConta = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_atualizarConta.place(relx=0.71, rely=0.55, anchor="w")
+        self.btn_atualizarConta = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white",command=self.atualizar_conta)
+        self.btn_atualizarConta.place(relx=0.71, rely=0.55, anchor="w")
 
     # Botão Excluir
-        btn_excluirConta = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_excluirConta.place(relx=0.80, rely=0.55, anchor="w")
+        self.btn_excluirConta = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white",command=self.excluir_conta)
+        self.btn_excluirConta.place(relx=0.80, rely=0.55, anchor="w")
+
+        self.tree = ttk.Treeview(self.root, columns=("idContaFinanceira", "NomeDaConta","Saldo","Descricao","DataCriacao"), show="headings")
+        self.tree.heading("idContaFinanceira", text="ID")
+        self.tree.heading("NomeDaConta", text="Nome da Conta")
+        self.tree.heading("Saldo", text="Saldo")
+        self.tree.heading("Descricao", text="Descricao")
+        self.tree.heading("DataCriacao", text="Data Criação")
+        self.tree.place(relx=0.03, rely=0.22, anchor="nw", width=450, height=425)
+
+        self.tree.tag_configure("center", anchor="center")
+
+
+
+        self.tree.column("idContaFinanceira", width=30)
+        self.tree.column("NomeDaConta", width=100)
+        self.tree.column("Saldo", width=70)
+        self.tree.column("Descricao", width=130)
+        self.tree.column("DataCriacao", width=100)
+    
+    def exibir_contas(self, contas):
+
+    # Limpar qualquer conteúdo anterior no retângulo cinza
+        self.tree.delete(*self.tree.get_children())
+
+        for conta in contas:
+        # Insira uma tupla contendo os valores
+            self.tree.insert("", "end", values=(
+            conta['idContaFinanceira'],
+            conta['NomeDaConta'],
+            conta['Saldo'],
+            conta['Descricao'],
+            conta['DataCriacao']
+        ),tags="center")
+    
+    def carregar_contas(self):
+        contas = self.contaFinanceira.carregar_contas()
+        self.exibir_contas(contas)
+
+    def salvar_conta(self):
+        # Obter dados do Entry e chamar método do controller
+        nome_conta = self.entry_conta.get()
+        saldo = self.entry_saldo.get()
+        descricao = self.entry_descricao.get()
+
+        # Chamar método do controller para salvar a conta
+        self.contaFinanceira.salvar_conta(nome_conta, saldo, descricao)
+
+        # Limpar dados após salvar
+        self.limpar_dados()
+
+        # Atualizar a exibição das contas na Treeview
+        self.carregar_contas()
+
+        # Exibir messagebox de sucesso
+        messagebox.showinfo("Sucesso", "Conta salva com sucesso!")
+
+    def atualizar_conta(self):
+        # Obter ID da conta selecionada
+        selected_item = self.tree.selection()
+        if selected_item:
+            id_conta = self.tree.item(selected_item, "values")[0]
+
+            # Obter dados do Entry e chamar método do controller
+            nome_conta = self.entry_conta.get()
+            saldo = self.entry_saldo.get()
+            descricao = self.entry_descricao.get()
+            
+
+            # Chamar método do controller para atualizar a conta
+            self.contaFinanceira.atualizar_conta(id_conta, nome_conta, saldo, descricao)
+
+            # Limpar dados após atualizar
+            self.limpar_dados()
+
+            # Atualizar a exibição das contas na Treeview
+            self.carregar_contas()
+
+            # Exibir messagebox de sucesso
+            messagebox.showinfo("Sucesso", "Conta atualizada com sucesso!")
+        else:
+            # Exibir messagebox de erro se nenhum item estiver selecionado
+            messagebox.showerror("Erro", "Selecione uma conta para atualizar.")
+
+    def excluir_conta(self):
+        # Obter ID da conta selecionada
+        selected_item = self.tree.selection()
+        if selected_item:
+            id_conta = self.tree.item(selected_item, "values")[0]
+
+            # Perguntar se tem certeza antes de excluir
+            resposta = messagebox.askquestion("Confirmação", "Tem certeza que deseja excluir esta conta?")
+
+            if resposta == "yes":
+                # Chamar método do controller para excluir a conta
+                self.contaFinanceira.excluir_conta(id_conta)
+
+                # Limpar dados após excluir
+                self.limpar_dados()
+
+                # Atualizar a exibição das contas na Treeview
+                self.carregar_contas()
+
+                # Exibir messagebox de sucesso
+                messagebox.showinfo("Sucesso", "Conta excluída com sucesso!")
+        else:
+            # Exibir messagebox de erro se nenhum item estiver selecionado
+            messagebox.showerror("Erro", "Selecione uma conta para excluir.")
+
+    def limpar_dados(self):
+        self.entry_conta.delete(0, tk.END)
+        self.entry_saldo.delete(0, tk.END)
+        self.entry_descricao.delete(0, tk.END)
         
+
+    
 class CadastroUsuarioView:
     def __init__(self, root):
         self.root = root
