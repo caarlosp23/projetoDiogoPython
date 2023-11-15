@@ -339,6 +339,8 @@ class CadastroContaView:
         self.center_window(900,570)
         self.root.configure(bg="#008BD6")
         self.create_widgets()
+        self.tree.bind("<ButtonRelease-1>", self.selecionar_conta)
+        
                  
     def center_window(self, width, height):
         screen_width = self.root.winfo_screenwidth()
@@ -361,19 +363,19 @@ class CadastroContaView:
         lbl_cadConta = tk.Label(self.root, text=f"CONTA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadConta.place(relx=0.58, rely=0.25, anchor="w") 
 
-        self.entry_Conta = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        self.entry_Conta = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
         self.entry_Conta.place(relx=0.75, rely=0.25, anchor="w")
 
         lbl_cadSaldo = tk.Label(self.root, text=f"SALDO INICIAL", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadSaldo.place(relx=0.58, rely=0.35, anchor="w") 
         
-        self.entry_ContaSaldo = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        self.entry_ContaSaldo = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
         self.entry_ContaSaldo.place(relx=0.75, rely=0.35, anchor="w")
 
         lbl_cadDesc = tk.Label(self.root, text=f"DESCRIÇÃO", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadDesc.place(relx=0.58, rely=0.45, anchor="w") 
         
-        self.entry_ContaDesc = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
+        self.entry_ContaDesc = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
         self.entry_ContaDesc.place(relx=0.75, rely=0.45, anchor="w")
 
         self.btn_salvarConta = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white",command=self.salvar_conta)
@@ -424,6 +426,7 @@ class CadastroContaView:
         contas = self.contaFinanceira.carregar_contas()
         self.exibir_contas(contas)
 
+
     def salvar_conta(self):
         # Obter dados do Entry e chamar método do controller
         nome_conta = self.entry_conta.get()
@@ -431,43 +434,23 @@ class CadastroContaView:
         descricao = self.entry_descricao.get()
 
         # Chamar método do controller para salvar a conta
-        self.contaFinanceira.salvar_conta(nome_conta, saldo, descricao)
+        self.contaFinanceira.salvar_conta()
 
+        print("chegou aqui no salvar")
         # Limpar dados após salvar
         self.limpar_dados()
 
         # Atualizar a exibição das contas na Treeview
-        self.carregar_contas()
-
+        self.carregar_contas()  # Chamar o método carregar_contas para obter a lista atualizada
+        print("passou carregador contas")
+        self.exibir_contas()  # Chamar diretamente o método exibir_contas
+        print("passou exibir contas")
         # Exibir messagebox de sucesso
         messagebox.showinfo("Sucesso", "Conta salva com sucesso!")
 
     def atualizar_conta(self):
         # Obter ID da conta selecionada
-        selected_item = self.tree.selection()
-        if selected_item:
-            id_conta = self.tree.item(selected_item, "values")[0]
-
-            # Obter dados do Entry e chamar método do controller
-            nome_conta = self.entry_conta.get()
-            saldo = self.entry_saldo.get()
-            descricao = self.entry_descricao.get()
-            
-
-            # Chamar método do controller para atualizar a conta
-            self.contaFinanceira.atualizar_conta(id_conta, nome_conta, saldo, descricao)
-
-            # Limpar dados após atualizar
-            self.limpar_dados()
-
-            # Atualizar a exibição das contas na Treeview
-            self.carregar_contas()
-
-            # Exibir messagebox de sucesso
-            messagebox.showinfo("Sucesso", "Conta atualizada com sucesso!")
-        else:
-            # Exibir messagebox de erro se nenhum item estiver selecionado
-            messagebox.showerror("Erro", "Selecione uma conta para atualizar.")
+        self.controller.atualizar_conta()
 
     def excluir_conta(self):
         # Obter ID da conta selecionada
@@ -498,7 +481,28 @@ class CadastroContaView:
         self.entry_conta.delete(0, tk.END)
         self.entry_saldo.delete(0, tk.END)
         self.entry_descricao.delete(0, tk.END)
+    
+    def selecionar_conta(self, event):
+        # Obtém a linha clicada
+        item = self.tree.selection()
         
+
+        if item:
+            # Obtém os valores da linha clicada
+            values = self.tree.item(item, "values")
+
+            id_conta = self.tree.item(item, "values")[0]
+            self.id_selecionado = id_conta
+
+            # Preenche os campos entry_Conta, entry_ContaSaldo e entry_ContaDesc
+            self.entry_Conta.delete(0, "end")
+            self.entry_Conta.insert(0, values[1])  # Nome da Conta
+
+            self.entry_ContaSaldo.delete(0, "end")
+            self.entry_ContaSaldo.insert(0, values[2])  # Saldo
+
+            self.entry_ContaDesc.delete(0, "end")
+            self.entry_ContaDesc.insert(0, values[3])  # Descrição
 
     
 class CadastroUsuarioView:

@@ -76,13 +76,13 @@ class ContaFinanceira:
         finally:
             self.db_manager.desconectar()
 
-    def atualizar_conta(self, id_conta, nome_conta, saldo, descricao, usuario_id):
+    def atualizar_conta(self, id_conta, nome, saldo, descricao):
         try:
             if self.db_manager.conectar():
                 cursor = self.db_manager.conn.cursor()
                 cursor.execute(
-                    "EXEC Update_ContaFinanceira @idContaFinanceira=?, @NomeDaConta=?, @Saldo=?, @Descricao=?, @DataCriacao=?, @Usuario_idUsuario=?",
-                    (id_conta, nome_conta, saldo, descricao, usuario_id)
+                    "EXEC Update_ContaFinanceira @idContaFinanceira=?, @NomeDaConta=?, @Saldo=?, @Descricao=?",
+                    (id_conta, nome, saldo, descricao)
                 )
                 self.db_manager.conn.commit()
         except Exception as e:
@@ -90,6 +90,20 @@ class ContaFinanceira:
         finally:
             self.db_manager.desconectar()
 
+    def conta_existente(self, nome_conta):
+        try:
+            if self.db_manager.conectar():
+                cursor = self.db_manager.conn.cursor()
+                query = "SELECT 1 FROM TBL_ContaFinanceira WHERE NomeDaConta = ?"
+                cursor.execute(query, (nome_conta,))
+                resultado = cursor.fetchone()
+                return resultado is not None
+        except Exception as e:
+            print(f"Erro ao verificar conta existente: {e}")
+        finally:
+            if self.db_manager.conn:
+                self.db_manager.desconectar()
+        return False
 
 class CategoriaTransacao:
     def __init__(self, nome):

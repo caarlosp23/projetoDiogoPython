@@ -191,20 +191,75 @@ class CadastroContaController:
         self.view.exibir_contas(contas)
     
     def salvar_conta(self):
+
+        nome = self.view.entry_Conta.get().strip()
+        saldo = self.view.entry_ContaSaldo.get().strip()
+        descricao = self.view.entry_ContaDesc.get().strip()
+
+        # Validar campos vazios
+        if not nome or not saldo or not descricao:
+            messagebox.showerror("Erro", "Preencha todos os campos antes de salvar.")
+            return
+
+        # Verificar se já existe uma conta com o mesmo nome
+        if self.contaFinanceira.conta_existente(nome):
+            messagebox.showerror("Erro", "Já existe uma conta com esse nome.")
+            return
+
         # Chamar método do model para salvar a conta
+        self.contaFinanceira.inserir_conta(nome, saldo, descricao, 1)
+
+        # Carregar contas após salvar
+        self.carregar_contas()
+
+        # Limpar dados após salvar
+        self.view.entry_Conta.delete(0, "end")
+        self.view.entry_ContaSaldo.delete(0, "end")
+        self.view.entry_ContaDesc.delete(0, "end")
+
+        # Exibir messagebox de sucesso
+        messagebox.showinfo("Sucesso", "Conta salva com sucesso!")
+        
+
+    def atualizar_conta(self):
+        id_conta = self.view.id_selecionado
         nome = self.view.entry_Conta.get()
         saldo = self.view.entry_ContaSaldo.get()
         descricao = self.view.entry_ContaDesc.get()
-        
-        self.contaFinanceira.inserir_conta(nome, saldo, descricao,1)  # Substitua 1 pelo ID do usuário
 
-    def atualizar_conta(self, id_conta, nome_conta, saldo, descricao, data_criacao):
-        # Chamar método do model para atualizar a conta
-        self.contaFinanceira.atualizar_conta(id_conta, nome_conta, saldo, descricao, data_criacao, usuario_id=1)  # Substitua 1 pelo ID do usuário
+        self.contaFinanceira.atualizar_conta(id_conta, nome, saldo, descricao)
+        self.carregar_contas()
+
+        self.view.entry_Conta.delete(0, "end")
+        self.view.entry_ContaSaldo.delete(0, "end")
+        self.view.entry_ContaDesc.delete(0, "end")
+        
+        messagebox.showinfo("Sucesso", "Conta atualizada com sucesso!")
     
-    def excluir_conta(self, id_conta):
+    def excluir_conta(self):
         # Chamar método do model para excluir a conta
-        self.model.excluir_conta(id_conta)
+        resposta = messagebox.askquestion("Confirmação", "Tem certeza que deseja excluir esta conta?")
+
+        if resposta == "yes":
+                # Chamar método do controller para excluir a conta
+
+                id_conta = self.view.id_selecionado
+        
+                self.contaFinanceira.excluir_conta(id_conta)
+
+                # Limpar dados após excluir
+                self.view.entry_Conta.delete(0, "end")
+                self.view.entry_ContaSaldo.delete(0, "end")
+                self.view.entry_ContaDesc.delete(0, "end")
+
+                # Atualizar a exibição das contas na Treeview
+                self.carregar_contas()
+
+                # Exibir messagebox de sucesso
+                messagebox.showinfo("Sucesso", "Conta excluída com sucesso!")
+        else:
+            # Exibir messagebox de erro se nenhum item estiver selecionado
+            messagebox.showerror("Erro", "Selecione uma conta para excluir.")
     
 class CadastroUsuarioController:
     def __init__(self, root):
