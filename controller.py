@@ -5,6 +5,7 @@ from config import DB_CONFIG
 from tkinter import messagebox
 from dataBase import *
 import tkinter as tk
+from tkinter import ttk
 
 
 class LoginController:
@@ -167,6 +168,9 @@ class CadastroCategoriaController:
 class CadastroTransacaoController:
     def __init__(self, root):
         self.view = CadastroTransacaoView(root)
+        self.categoriaTrans = CategoriaTransacao("Nome")
+        categorias = self.categoriaTrans.get_categoriaComboBox()
+        
         
   
     #def listar_transacao(self):
@@ -180,8 +184,6 @@ class CadastroContaController:
         self.contaFinanceira = ContaFinanceira("nome","saldo","usuario","datacriacao")
         contas = self.contaFinanceira.carregar_contas()
         self.view.exibir_contas(contas)
-
-
         self.view.btn_salvarConta.config(command = self.salvar_conta)
         self.view.btn_excluirConta.config(command = self.excluir_conta)
         self.view.btn_atualizarConta.config(command = self.atualizar_conta)
@@ -223,18 +225,22 @@ class CadastroContaController:
 
     def atualizar_conta(self):
         id_conta = self.view.id_selecionado
-        nome = self.view.entry_Conta.get()
-        saldo = self.view.entry_ContaSaldo.get()
-        descricao = self.view.entry_ContaDesc.get()
+        nome = self.view.entry_Conta.get().strip()
+        saldo = self.view.entry_ContaSaldo.get().strip()
+        descricao = self.view.entry_ContaDesc.get().strip()
 
-        self.contaFinanceira.atualizar_conta(id_conta, nome, saldo, descricao)
-        self.carregar_contas()
+       
+        if nome and saldo and descricao:  # Verificar se nenhum campo está vazio
+                self.contaFinanceira.atualizar_conta(id_conta, nome, saldo, descricao)
+                self.carregar_contas()
 
-        self.view.entry_Conta.delete(0, "end")
-        self.view.entry_ContaSaldo.delete(0, "end")
-        self.view.entry_ContaDesc.delete(0, "end")
-        
-        messagebox.showinfo("Sucesso", "Conta atualizada com sucesso!")
+                self.view.entry_Conta.delete(0, "end")
+                self.view.entry_ContaSaldo.delete(0, "end")
+                self.view.entry_ContaDesc.delete(0, "end")
+
+                messagebox.showinfo("Sucesso", "Conta atualizada com sucesso!")
+        else:
+                messagebox.showerror("Erro", "Todos os campos devem ser preenchidos.")
     
     def excluir_conta(self):
         # Chamar método do model para excluir a conta

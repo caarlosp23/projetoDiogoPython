@@ -138,6 +138,21 @@ class CategoriaTransacao:
 
         return categorias
     
+    def get_categoriaComboBox(self):
+        categorias = []
+        try:
+            if self.db_manager.conectar():
+                cursor = self.db_manager.conn.cursor()
+                cursor.execute("selecT descricao from Tbl_CategoriaTransacao")
+                rows = cursor.fetchall()
+                categorias = [{'descricao': row.descricao} for row in rows]
+        except Exception as e:
+            print(f"Erro ao carregar categorias: {e}")
+        finally:
+                self.db_manager.desconectar()
+
+        return categorias
+    
     def excluir_categoria(self, id_categoria):
 
         try:

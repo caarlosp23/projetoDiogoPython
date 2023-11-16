@@ -4,6 +4,7 @@ from tkinter import PhotoImage
 from tkinter import ttk
 from controller import *
 from model import CategoriaTransacao
+from tkcalendar import Calendar, DateEntry
 
 
 class LoginView:
@@ -311,25 +312,71 @@ class CadastroTransacaoView:
         ret_cinza = tk.Canvas(self.root, bg="#D9D9D9", width=390, height=425)
         ret_cinza.place(relx=0.03, rely=0.22, anchor="nw")
         
-        lbl_cadCategoria = tk.Label(self.root, text=f"CADASTRO DE CATEGORIA", font=("Helvetica", 20), bg="#008BD6", fg="white")
-        lbl_cadCategoria.place(relx=0.5, rely=0.10, anchor="center")
+        lbl_cadTransacao = tk.Label(self.root, text=f"CADASTRO DE TRANSAÇÃO", font=("Helvetica", 20), bg="#008BD6", fg="white")
+        lbl_cadTransacao.place(relx=0.5, rely=0.10, anchor="center")
         
-        entry_categoria = tk.Entry(self.root, font=("Helvetica", 12),width=9 ,highlightthickness=1, highlightbackground="black")
-        entry_categoria.place(relx=0.7, rely=0.25, anchor="w")
+        lbl_cadTipo = tk.Label(self.root, text=f"TIPO", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
+        lbl_cadTipo.place(relx=0.58, rely=0.25, anchor="w")
+        # entry_tipo = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
+        # entry_tipo.place(relx=0.78, rely=0.25, anchor="w")
 
-        lbl_cadCategoria = tk.Label(self.root, text=f"CATEGORIA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
-        lbl_cadCategoria.place(relx=0.58, rely=0.25, anchor="w")
+        cmbTipo = ['ENTRADA', 'SAIDA']
+        self.cmbTipo = ttk.Combobox(self.root, values=cmbTipo, font=("Helvetica", 12), width=10)
+        self.cmbTipo.place(relx=0.78, rely=0.25, anchor="w")
+        # Configurar uma variável de controle para armazenar a categoria selecionada
+        self.cmbTipoValor = tk.StringVar()
+         # Atribuir a variável de controle ao Combobox
+        self.cmbTipo.config(textvariable=self.cmbTipo)
+        
 
+        lbl_cadValor = tk.Label(self.root, text=f"VALOR", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
+        lbl_cadValor.place(relx=0.58, rely=0.35, anchor="w")
+        entry_valor = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
+        entry_valor.place(relx=0.78, rely=0.35, anchor="w")
+
+        lbl_dtaTransacao = tk.Label(self.root, text=f"DATA TRANSACAO", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
+        lbl_dtaTransacao.place(relx=0.58, rely=0.45, anchor="w")
+        entry_dtaTransacao = DateEntry(self.root, font=("Helvetica", 12),locale= 'pt_BR', date_pattern = 'dd/mm/yyyy', width=10 ,highlightthickness=1, highlightbackground="black")
+        entry_dtaTransacao.place(relx=0.78, rely=0.45, anchor="w")
+
+        lbl_Categoria = tk.Label(self.root, text=f"CATEGORIA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
+        lbl_Categoria.place(relx=0.58, rely=0.55, anchor="w")
+        # entry_Categoria = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
+        # entry_Categoria.place(relx=0.78, rely=0.55, anchor="w")
+        categorias = ['Categoria 1', 'Categoria 2', 'Categoria 3']
+        self.combobox_categoria = ttk.Combobox(self.root, values=categorias, font=("Helvetica", 12), width=10)
+        self.combobox_categoria.place(relx=0.78, rely=0.55, anchor="w")
+        # Configurar uma variável de controle para armazenar a categoria selecionada
+        self.categoria_selecionada = tk.StringVar()
+         # Atribuir a variável de controle ao Combobox
+        self.combobox_categoria.config(textvariable=self.categoria_selecionada)
+         # Configurar um evento para ser acionado quando a seleção for alterada
+        self.combobox_categoria.bind("<<ComboboxSelected>>", self.selecionar_categoria)
+
+        lbl_ContaFinanceira = tk.Label(self.root, text=f"CONTA FINANCEIRA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
+        lbl_ContaFinanceira.place(relx=0.58, rely=0.65, anchor="w")
+        entry_ContaFinanceira = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
+        entry_ContaFinanceira.place(relx=0.78, rely=0.65, anchor="w")
+
+        
+
+     # Botão Salvar
         btn_salvar = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_salvar.place(relx=0.64, rely=0.35, anchor="w")
+        btn_salvar.place(relx=0.64, rely=0.75, anchor="w")
 
     # Botão Atualizar
         btn_atualizar = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_atualizar.place(relx=0.71, rely=0.35, anchor="w")
+        btn_atualizar.place(relx=0.71, rely=0.75, anchor="w")
 
     # Botão Excluir
         btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_excluir.place(relx=0.80, rely=0.35, anchor="w")
+        btn_excluir.place(relx=0.80, rely=0.75, anchor="w")
+    
+
+    def selecionar_categoria(self, event):
+        # Este método é chamado quando a seleção no Combobox é alterada
+        categoria_selecionada = self.categoria_selecionada.get()
+        print(f"Categoria selecionada: {categoria_selecionada}")
     
 class CadastroContaView:
     def __init__(self, root):
@@ -485,6 +532,8 @@ class CadastroContaView:
     def selecionar_conta(self, event):
         # Obtém a linha clicada
         item = self.tree.selection()
+
+        self.id_selecionado = 99
         
 
         if item:
@@ -503,8 +552,7 @@ class CadastroContaView:
 
             self.entry_ContaDesc.delete(0, "end")
             self.entry_ContaDesc.insert(0, values[3])  # Descrição
-
-    
+  
 class CadastroUsuarioView:
     def __init__(self, root):
         self.root = root
