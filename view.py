@@ -1,25 +1,23 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
-from tkinter import PhotoImage
 from tkinter import ttk
 from controller import *
-from model import CategoriaTransacao
-from tkcalendar import Calendar, DateEntry
+from tkcalendar import DateEntry
+from datetime import datetime
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import textwrap
 
 
 class LoginView:
     def __init__(self, root):
         self.root = root
         self.root.title("Tela de Login")
-        # Define o tamanho da tela como 900x570
         width = 900
         height = 570
         self.center_window(width, height)
-        # Define a cor de fundo da tela para "#008BD6"
         self.root.configure(bg="#008BD6")
-        # Cria campos de entrada (inputs) para login e senha
         self.create_login_fields()
-        # Cria o botão de login
         self.create_login_button()
 
     def center_window(self, width, height):
@@ -77,6 +75,7 @@ class TelaPrincipalView:
         self.center_window(900,570)
         self.root.protocol("WM_DELETE_WINDOW", self.fechar_projeto)
         
+        
     def fechar_projeto(self):
         self.root.quit()
 
@@ -84,104 +83,135 @@ class TelaPrincipalView:
         white_rectangle = tk.Canvas(self.root, bg="#FFFFFF", width=900, height=465)
         white_rectangle.place(relx=0, rely=1, anchor="sw")
 
-         # Adicione o nome do usuário ao rótulo de boas-vindas
+        
         lbl_bemvindo = tk.Label(self.root, text=f"BEM VINDO, {nome_usuario}", font=("Helvetica", 20), bg="#008BD6", fg="white")
         lbl_bemvindo.place(relx=0.17, rely=0.12, anchor="center")
 
-        cadastrar_dropdown = tk.Menubutton(self.root, text="CADASTRAR", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        cadastrar_dropdown.place(relx=0.75, rely=0.12, anchor="center")
+        self.btn_categoria = tk.Button(self.root, text="CATEGORIA", font=("Helvetica", 10), bg="#008BD6", fg="white")
+        self.btn_categoria.place(relx=0.74, rely=0.12, anchor="center")
 
-        cadastrar_menu = tk.Menu(cadastrar_dropdown)
-        cadastrar_dropdown.configure(menu=cadastrar_menu)
-  
-        opcoes_cadastro = ["CATEGORIA", "CONTA", "USUÁRIO"]
-        for opcao in opcoes_cadastro:
-            cadastrar_menu.add_command(label=opcao, command=lambda o=opcao: self.abrir_cadastro(o))
+        self.btn_conta = tk.Button(self.root, text="CONTA", font=("Helvetica", 10), bg="#008BD6", fg="white")
+        self.btn_conta.place(relx=0.84, rely=0.12, anchor="center")
 
-    
-
-       
-        btn_financeiro = tk.Menubutton(self.root, text="TRANSAÇÕES", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_financeiro.place(relx=0.90, rely=0.12, anchor="center")
-       
-        menu = tk.Menu(btn_financeiro, tearoff=0)
-        menu.add_command(label="Cadastrar Transação", command=self.abrir_transacao)
-        btn_financeiro.config(menu=menu)
+        self.btn_transacao = tk.Button(self.root, text="TRANSACAO", font=("Helvetica", 10), bg="#008BD6", fg="white")
+        self.btn_transacao.place(relx=0.94, rely=0.12, anchor="center")
 
         label_periodo = tk.Label(self.root, text="PERÍODO", font=("Helvetica", 16), bg="#FFFFFF" ,fg="black")
         label_periodo.place(relx=0.05, rely=0.28, anchor="w")
 
-        entry_data_inicial = tk.Entry(self.root, font=("Helvetica", 12),width=9)
-        entry_data_inicial.place(relx=0.02, rely=0.35, anchor="w")
-        entry_data_inicial.insert(0, "dd/mm/aaaa")
 
-        entry_data_final = tk.Entry(self.root, font=("Helvetica", 12),width=9)
-        entry_data_final.place(relx=0.12, rely=0.35, anchor="w")
-        entry_data_final.insert(0, "dd/mm/aaaa")
+        label_periodoInicial = tk.Label(self.root, text="Data Inicio", font=("Helvetica", 10), bg="#FFFFFF" ,fg="black")
+        label_periodoInicial.place(relx=0.02, rely=0.35, anchor="w")
 
-        btn_filtrarPeriodo = tk.Button(self.root, text="Filtrar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_filtrarPeriodo.place(relx=0.08, rely=0.45, anchor="w")
+        self.entry_data_inicial = DateEntry(self.root, locale= 'pt_BR', date_pattern = 'dd/mm/yyyy', font=("Helvetica", 10),width=9)
+        self.entry_data_inicial.place(relx=0.10, rely=0.35, anchor="w")
+  
 
-        # Adicione um botão para atualizar o saldo (se necessário)
-        botao_atualizar_saldo = tk.Button(self.root, text="Atualizar Saldo", font=("Helvetica", 12), bg="#008BD6", fg="white", command=self.atualizar_saldo)
-        botao_atualizar_saldo.place(relx=0.05, rely=0.78, anchor="w")
+        label_periodoInicial = tk.Label(self.root, text="Data Fim", font=("Helvetica", 10), bg="#FFFFFF" ,fg="black")
+        label_periodoInicial.place(relx=0.02, rely=0.42, anchor="w")
 
-        # Crie o rótulo de saldo inicialmente com um valor padrão
-        self.label_saldo = tk.Label(self.root, text=f"SALDO: R$ 0.00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
-        self.label_saldo.place(relx=0.02, rely=0.7, anchor="w")
+        self.entry_data_final = DateEntry(self.root,locale= 'pt_BR', date_pattern = 'dd/mm/yyyy', font=("Helvetica", 10),width=9)
+        self.entry_data_final.place(relx=0.10, rely=0.42, anchor="w")
+       
+        self.btn_filtrarPeriodo = tk.Button(self.root, text="Filtrar", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        self.btn_filtrarPeriodo.place(relx=0.08, rely=0.50, anchor="w")
+
 
         #Saldo
         self.lbl_saldoPeriodo = tk.Label(self.root, text="SALDO PERIODO", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
         self.lbl_saldoPeriodo.place(relx=0.25, rely=0.28, anchor="w")
 
-        self.lbl_saldoPeriodoValor = tk.Label(self.root, text="R$500,00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
+        self.lbl_saldoPeriodoValor = tk.Label(self.root, text="R$0,00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
         self.lbl_saldoPeriodoValor.place(relx=0.29, rely=0.35, anchor="w")
 
         #Entrada
         self.lbl_Entrada = tk.Label(self.root, text="ENTRADA PERIODO", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
         self.lbl_Entrada.place(relx=0.49, rely=0.28, anchor="w")
 
-        self.lbl_EntradaValor = tk.Label(self.root, text="R$500,00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
+        self.lbl_EntradaValor = tk.Label(self.root, text="R$0,00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
         self.lbl_EntradaValor.place(relx=0.55, rely=0.35, anchor="w")
 
         #Saida
         self.lbl_Saida = tk.Label(self.root, text="SAIDA PERIODO", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
         self.lbl_Saida.place(relx=0.75, rely=0.28, anchor="w")
 
-        self.lbl_SaidaValor = tk.Label(self.root, text="R$500,00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
+        self.lbl_SaidaValor = tk.Label(self.root, text="R$0,00", font=("Helvetica", 16), bg="#FFFFFF", fg="black")
         self.lbl_SaidaValor.place(relx=0.80, rely=0.35, anchor="w")
 
-    def abrir_cadastro(self, opcao):
-        if opcao == "CATEGORIA":
-            # Implemente a lógica para abrir a tela de cadastro de categorias
-            categoria_window = tk.Toplevel(self.root)
-            categoria_window.title("Cadastro de Categoria")
-            CadastroCategoriaView(categoria_window)
-        # Inicialize o controlador da tela de cadastro de categoria
-        elif opcao == "CONTA":
-            categoria_window = tk.Toplevel(self.root)
-            CadastroContaView(categoria_window)
-            # Implemente a lógica para abrir a tela de cadastro de contas
-         
-        elif opcao == "USUÁRIO":
+        self.lbl_SaldoPorConta = tk.Label(self.root, text="SALDO POR CONTA", font=("Helvetica", 10), bg="#FFFFFF", fg="black")
+        self.lbl_SaldoPorConta.place(relx=0.05, rely=0.57, anchor="w")
+        #TREE VIEW SALDO CONTAS
+        self.treeviewSaldoContas = ttk.Treeview(self.root, columns=('Nome da Conta', 'Saldo'), show='headings')
 
-            categoria_window = tk.Toplevel(self.root)
-            CadastroUsuarioView(categoria_window)
-            # Implemente a lógica para abrir a tela de cadastro de usuários
-            
+        # Definir cabeçalhos
+        self.treeviewSaldoContas.heading('Nome da Conta', text='Nome da Conta')
+        self.treeviewSaldoContas.heading('Saldo', text='Saldo')
+        self.treeviewSaldoContas.place(relx=0.03, rely=0.60, anchor="nw", width=180, height=180)
+
+        self.treeviewSaldoContas.column("Nome da Conta", width=65)
+        self.treeviewSaldoContas.column("Saldo", width=50)
+        self.treeviewSaldoContas.tag_configure("center", anchor="center")
+
+
+        self.lbl_SaldoTotal = tk.Label(self.root,  font=("Helvetica", 10), bg="#FFFFFF", fg="black")
+        self.lbl_SaldoTotal.place(relx=0.03, rely=0.95, anchor="w")
+
+
+
+        
+        #Grafico Entrada
+        self.figura = Figure(figsize=(8, 6), tight_layout=True)
+        self.eixo = self.figura.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.figura, master=self.root)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.place(relx=0.43, rely=0.7, anchor="center",width= 300, height=300)
+
+        self.figuraSaida = Figure(figsize=(8, 6), tight_layout=True)
+        self.eixoSaida = self.figuraSaida.add_subplot(111)  
+        self.canvasSaida = FigureCanvasTkAgg(self.figuraSaida, master=self.root)  
+        self.canvas_widgetSaida = self.canvasSaida.get_tk_widget() 
+        self.canvas_widgetSaida.place(relx=0.80, rely=0.7, anchor="center", width=300, height=300)
+        
+
+       
+
+
+    def criar_grafico_top_categoria_entrada(self,valoresContro):
+        self.eixo.clear()
+
+        categorias = [textwrap.fill(dado['Categoria'], width=10) for dado in valoresContro]
+        valores = [float(dado['Valor']) for dado in valoresContro]
+        self.eixo.bar(categorias, valores, color='green')
+        self.eixo.set_ylabel('Valor')
+        self.eixo.set_title('Top Entrada por categoria')
+
+        self.canvas.draw()
+    
+    def criar_grafico_top_categoria_saida(self,valoresContro):
+        
+        self.eixoSaida.clear()
+
+        categorias = [textwrap.fill(dado['Categoria'], width=10) for dado in valoresContro]
+        valores = [float(dado['Valor']) for dado in valoresContro]
+
+        self.eixoSaida.bar(categorias, valores, color='red')
+        self.eixoSaida.set_ylabel('Valor')
+        self.eixoSaida.set_title('Top Saida por categoria')
+
+        self.canvasSaida.draw()
+
+    def alimentar_treeview(self, dados):
+        for item in self.treeviewSaldoContas.get_children():
+            self.treeviewSaldoContas.delete(item)
+        for dado in dados:
+            self.treeviewSaldoContas.insert('', 'end', values=(dado['NomeDaConta'], dado['SaldoFinal']))
+
     
 
-    def abrir_transacao(self):
-        transacao_window = tk.Toplevel(self.root)
-        transacao_window.title("Transações")
-        CadastroTransacaoView(transacao_window)
-
     def atualizar_saldo(self):
-        # Aqui você pode implementar a lógica para atualizar o saldo
-        # Substitua o valor a seguir pelo saldo real
+
         saldo = 1000.00  # Exemplo de saldo
         self.label_saldo.config(text=f"SALDO: R$ {saldo:.2f}")
-
     
     def center_window(self, width, height):
         screen_width = self.root.winfo_screenwidth()
@@ -266,6 +296,7 @@ class CadastroCategoriaView:
         # Lógica para obter dados do Entry e chamar a stored procedure de inserção
         descricao = self.entry_categoria.get()  # Obter descrição da categoria
         self.categoria_transacao.inserir_categoria(descricao)
+        print('entrou aqui na salvar categoria')
         self.atualizar_lista_categorias()
         
     
@@ -297,6 +328,7 @@ class CadastroTransacaoView:
         self.root.configure(bg="#008BD6")
         self.center_window(900, 570)
         self.create_widgets()
+        self.treeview.bind("<ButtonRelease-1>", self.preencher_campos)
                  
     def center_window(self, width, height):
         screen_width = self.root.winfo_screenwidth()
@@ -317,34 +349,31 @@ class CadastroTransacaoView:
         
         lbl_cadTipo = tk.Label(self.root, text=f"TIPO", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadTipo.place(relx=0.58, rely=0.25, anchor="w")
-        # entry_tipo = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
-        # entry_tipo.place(relx=0.78, rely=0.25, anchor="w")
 
-        cmbTipo = ['ENTRADA', 'SAIDA']
-        self.cmbTipo = ttk.Combobox(self.root, values=cmbTipo, font=("Helvetica", 12), width=10)
-        self.cmbTipo.place(relx=0.78, rely=0.25, anchor="w")
-        # Configurar uma variável de controle para armazenar a categoria selecionada
-        self.cmbTipoValor = tk.StringVar()
-         # Atribuir a variável de controle ao Combobox
-        self.cmbTipo.config(textvariable=self.cmbTipo)
-        
+        self.entry_tipoTrans = ttk.Combobox(self.root, font=("Helvetica", 12), width=10)
+        self.entry_tipoTrans.place(relx=0.78, rely=0.25, anchor="w")
 
         lbl_cadValor = tk.Label(self.root, text=f"VALOR", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_cadValor.place(relx=0.58, rely=0.35, anchor="w")
-        entry_valor = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
-        entry_valor.place(relx=0.78, rely=0.35, anchor="w")
+        # entry_valor = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
+        # entry_valor.place(relx=0.78, rely=0.35, anchor="w")
+        validate_cmd = (self.root.register(self.validar_numero), '%P')
+        
+        self.entry_valor = tk.Entry(self.root, font=("Helvetica", 12), width=12, highlightthickness=1, highlightbackground="black", validate="key", validatecommand=validate_cmd)
+        self.entry_valor.place(relx=0.78, rely=0.35, anchor="w")
 
         lbl_dtaTransacao = tk.Label(self.root, text=f"DATA TRANSACAO", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_dtaTransacao.place(relx=0.58, rely=0.45, anchor="w")
-        entry_dtaTransacao = DateEntry(self.root, font=("Helvetica", 12),locale= 'pt_BR', date_pattern = 'dd/mm/yyyy', width=10 ,highlightthickness=1, highlightbackground="black")
-        entry_dtaTransacao.place(relx=0.78, rely=0.45, anchor="w")
+        
+        self.entry_dtaTransacao = DateEntry(self.root, font=("Helvetica", 12),locale= 'pt_BR', date_pattern = 'dd/mm/yyyy', width=10 ,highlightthickness=1, highlightbackground="black")
+        self.entry_dtaTransacao.place(relx=0.78, rely=0.45, anchor="w")
 
         lbl_Categoria = tk.Label(self.root, text=f"CATEGORIA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_Categoria.place(relx=0.58, rely=0.55, anchor="w")
         # entry_Categoria = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
         # entry_Categoria.place(relx=0.78, rely=0.55, anchor="w")
-        categorias = ['Categoria 1', 'Categoria 2', 'Categoria 3']
-        self.combobox_categoria = ttk.Combobox(self.root, values=categorias, font=("Helvetica", 12), width=10)
+        
+        self.combobox_categoria = ttk.Combobox(self.root, font=("Helvetica", 12), width=10)
         self.combobox_categoria.place(relx=0.78, rely=0.55, anchor="w")
         # Configurar uma variável de controle para armazenar a categoria selecionada
         self.categoria_selecionada = tk.StringVar()
@@ -355,29 +384,98 @@ class CadastroTransacaoView:
 
         lbl_ContaFinanceira = tk.Label(self.root, text=f"CONTA FINANCEIRA", font=("Helvetica", 12), bg="#FFFFFF", fg="black")
         lbl_ContaFinanceira.place(relx=0.58, rely=0.65, anchor="w")
-        entry_ContaFinanceira = tk.Entry(self.root, font=("Helvetica", 12),width=12 ,highlightthickness=1, highlightbackground="black")
-        entry_ContaFinanceira.place(relx=0.78, rely=0.65, anchor="w")
 
-        
+        self.cmbContas = ttk.Combobox(self.root, font=("Helvetica", 11), width=11)
+        self.cmbContas.place(relx=0.78, rely=0.65, anchor="w")
 
      # Botão Salvar
-        btn_salvar = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_salvar.place(relx=0.64, rely=0.75, anchor="w")
+        self.btn_salvar = tk.Button(self.root, text="Salvar", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        self.btn_salvar.place(relx=0.64, rely=0.75, anchor="w")
 
     # Botão Atualizar
-        btn_atualizar = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_atualizar.place(relx=0.71, rely=0.75, anchor="w")
+        self.btn_atualizar = tk.Button(self.root, text="Atualizar", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        self.btn_atualizar.place(relx=0.71, rely=0.75, anchor="w")
 
     # Botão Excluir
-        btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
-        btn_excluir.place(relx=0.80, rely=0.75, anchor="w")
-    
+        self.btn_excluir = tk.Button(self.root, text="Excluir", font=("Helvetica", 12), bg="#008BD6", fg="white")
+        self.btn_excluir.place(relx=0.80, rely=0.75, anchor="w")
 
+       
+        # Criar Treeview
+        self.treeview = ttk.Treeview(self.root, columns=('ID', 'Tipo Transação', 'Valor', 'Data', 'Categoria', 'Conta'), show='headings', height=10)
+        self.treeview.heading('ID', text='ID')
+        self.treeview.heading('Tipo Transação', text='Transação')
+        self.treeview.heading('Valor', text='Valor')
+        self.treeview.heading('Data', text='Data')
+        self.treeview.heading('Categoria', text='Categoria')
+        self.treeview.heading('Conta', text='Conta')
+
+        # Configurar o tamanho das colunas individualmente
+        self.treeview.column('ID', width=25, anchor=tk.CENTER)
+        self.treeview.column('Tipo Transação', width=70, anchor=tk.CENTER)
+        self.treeview.column('Valor', width=80, anchor=tk.CENTER)
+        self.treeview.column('Data', width=80, anchor=tk.CENTER)
+        self.treeview.column('Categoria', width=100, anchor=tk.CENTER)
+        self.treeview.column('Conta', width=100, anchor=tk.CENTER)
+
+
+        # Criar e posicionar a Treeview no mesmo local do retângulo, definindo largura e altura
+        self.treeview.place(relx=0.03, rely=0.22, anchor="nw", width=475, height=425)
+
+
+   
+    def validar_numero(self, novo_valor):
+        if novo_valor == "" or novo_valor == "-":
+            return True  # Permite Backspace e apagar o conteúdo
+
+        try:
+            # Tenta converter o novo valor para float
+            float(novo_valor)
+            return True
+        except ValueError:
+            # Se a conversão falhar, significa que não é um número
+            return False
+        
     def selecionar_categoria(self, event):
         # Este método é chamado quando a seleção no Combobox é alterada
         categoria_selecionada = self.categoria_selecionada.get()
         print(f"Categoria selecionada: {categoria_selecionada}")
     
+    def preencher_campos(self, event):
+        # Obter a linha clicada
+        item = self.treeview.selection()[0]
+
+        # Obter os valores da linha clicada
+        valores = self.treeview.item(self.treeview.selection(), 'values')
+
+    # Preencha os campos com os valores obtidos
+        self.entry_tipoTrans.set(valores[1])  # Tipo de transação
+        self.entry_valor.delete(0, tk.END)
+        self.entry_valor.insert(0, valores[2])  # Valor
+    # Converta a string de data para um objeto date
+        data_transacao = datetime.strptime(valores[3], "%Y-%m-%d").date()
+        self.entry_dtaTransacao.set_date(data_transacao)  # Data de transação
+        self.combobox_categoria.set(valores[4])  # Categoria
+        self.cmbContas.set(valores[5]) 
+    
+
+    def obter_id_selecionado(self):
+        item_selecionado = self.treeview.selection()
+        if item_selecionado:
+            return self.treeview.item(item_selecionado)['values'][0]
+        return None
+
+    def exibir_transacoes(self, transacoes):
+    # Limpar qualquer conteúdo anterior na Treeview
+        
+        self.treeview.delete(*self.treeview.get_children())
+
+        for transacao in transacoes:
+        # Insira uma tupla contendo os valores da transação
+            self.treeview.insert("", "end", values=(transacao['idtransacao'], transacao['tipotransacao'], transacao['valor'],
+                                                     transacao['datatransacao'], transacao['categoria'],
+                                                       transacao['conta']))
+
 class CadastroContaView:
     def __init__(self, root):
         self.root = root
@@ -472,7 +570,6 @@ class CadastroContaView:
     def carregar_contas(self):
         contas = self.contaFinanceira.carregar_contas()
         self.exibir_contas(contas)
-
 
     def salvar_conta(self):
         # Obter dados do Entry e chamar método do controller

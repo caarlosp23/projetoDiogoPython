@@ -20,8 +20,3 @@ class DatabaseManager:
             self.conn.close()
             self.conn = None
 
-# Exemplo de uso:
-db_manager = DatabaseManager()
-if db_manager.conectar():
-    # Realize as consultas ou operações no banco de dados aqui
-    db_manager.desconectar()

@@ -6,94 +6,129 @@ from tkinter import messagebox
 from dataBase import *
 import tkinter as tk
 from tkinter import ttk
+from datetime import datetime
 
 
 class LoginController:
     def __init__(self, root, db_config):
         self.view = LoginView(root)
         self.db_config = db_config
+        self.loginService = Usuario("nome", "email", "senha")
         self.view.login_button.config(command=self.login)
         self.db_manager = DatabaseManager()
         self.tela_principal_controller = None  
-
-    def login(self):
-    
-        usuario = self.view.login_entry.get()
-        senha = self.view.senha_entry.get()
-
-        if self.validar_usuario(usuario, senha):
-             self.abrir_telaPrincipal(usuario)
-             self.view.root.destroy()
-             
-            # O login foi bem-sucedido, você pode redirecionar para a próxima tela ou realizar outras ações aqui
-            
-        else:
-            # # O login falhou, exiba uma mensagem de erro ou realize outras ações necessárias
-            messagebox.showerror("Erro de Login", "Credenciais incorretas. Verifique seu usuário e senha.")
-
-    def login(self):
-        usuario = self.view.login_entry.get()
-        senha = self.view.senha_entry.get()
-
-        if self.validar_usuario(usuario, senha):
-            # Abra a tela principal diretamente na mesma janela
-            self.abrir_telaPrincipal(usuario)
-            # Não é mais necessário destruir a janela de login
-        else:
-            messagebox.showerror("Erro de Login", "Credenciais incorretas. Verifique seu usuário e senha.")
-
-    def abrir_telaPrincipal(self, nome_usuario):
-        self.view.root.withdraw() 
-        # Em vez de criar uma nova janela com tk.Tk(), crie o controlador da tela principal na janela existente
-        self.tela_principal_controller = TelaPrincipalController(self.view.root, nome_usuario)
-
-    def validar_usuario(self, login, senha):
-        conn = None
-        try:
-            if self.db_manager.conectar():
-                cursor = self.db_manager.conn.cursor()
-                query = "SELECT idUsuario FROM Tbl_Usuario WHERE Login = ? AND Senha = ?"
-                cursor.execute(query, (login, senha))
-                resultado = cursor.fetchone()
-                if resultado:
-                    return True
-                else:
-                    return False
-            
-            self.db_manager.desconectar() 
-
-        except Exception as e:
-            print(f"Erro ao validar login: {e}")
-            return False
-        finally:
-            if self.db_manager.conn:
-                 self.db_manager.desconectar() 
-    
-    def abrir_telaPrincipal(self,nome_usuario):
-         
-        self.view.root.withdraw()  # Oculta a janela de login
-        root = tk.Tk()  # Crie uma nova janela principal
-        self.tela_principal = TelaPrincipalView(root,nome_usuario)  # Crie a Tela Principal
-        root.mainloop() # Crie a Tela Principal
-    
-    # def fechar_projeto(self):
-    #     self.view.root.quit()
         
+    def login(self):
+        usuario = self.view.login_entry.get()
+        senha = self.view.senha_entry.get()
+
+        if self.loginService.validar_usuario(usuario, senha):
+          
+            self.abrir_telaPrincipal(usuario)
+        
+        else:
+            messagebox.showerror("Erro de Login", "Credenciais incorretas. Verifique seu usuário e senha.")
+
+    def abrir_telaPrincipal(self,nome_usuario):
+        self.view.root.withdraw() 
+        root = tk.Tk()  
+        self.tela_principal = TelaPrincipalController(root,nome_usuario)  
+        root.mainloop()
+
 class TelaPrincipalController:
     def __init__(self, root, nome_usuario):
         self.view = TelaPrincipalView(root, nome_usuario)
         self.view.controller = self
+        self.contaService = ContaFinanceira("nome", "saldo_inicial", "usuario", "datacriacao")
+        self.view.btn_categoria.config(command=self.abrir_categoria)
+        self.view.btn_conta.config(command=self.abrir_conta)
+        self.view.btn_transacao.config(command=self.abrir_transacao)
+        self.inicializar_valores()
+        self.totalizador_Contas()
+        self.view.btn_filtrarPeriodo.config(command=self.entrada_periodo)
+        self.categoriaService = CategoriaTransacao("nome")
+        self.get_valoresGrafico()
         
-    #def listar_topEntrada(self):
-    #def listar_topSaida(self):
-    #def totalizarSaldoConta(self):
-    #def totalizarSaldoContaPeriodo(self):
-    #def totalEntradaPeriodo(self):
-    #def totalSaidaPeriodo(self):
+    def inicializar_valores(self):
+        # Carregar contas e saldos
+        contas_saldos = self.carregar_contas_saldos()
+        # Alimentar a Treeview com os dados
+        self.view.alimentar_treeview(contas_saldos)
+    
+    def get_valoresGrafico(self):
+        valoresEntrada = self.categoriaService.get_TopCategoriaEntrada()
+        self.view.criar_grafico_top_categoria_entrada(valoresEntrada)
+        valoresSaida = self.categoriaService.get_TopCategoriaSaida()
+        self.view.criar_grafico_top_categoria_saida(valoresSaida)
+    
+    def totalizador_Contas(self):
+        saldo = self.carregar_contas_saldos()
+        saldos_conta = [x['SaldoFinal'] for x in saldo]
+        
+        soma_saldos = sum(saldos_conta)
+        
+        self.view.lbl_SaldoTotal.config(text=f"SALDO TOTAL : R$ {soma_saldos}")
 
-    def __init__(self, root):
-        self.view = CadastroCategoriaView(root)
-      
+    def entrada_periodo(self):
+        dtaInicial = self.view.entry_data_inicial.get_date()
+        dtaFinal = self.view.entry_data_final.get_date()
+        
+        dtaInicialFormat = dtaInicial.strftime('%Y-%m-%d')
+        dtaFinalFormat = dtaFinal.strftime('%Y-%m-%d')
+
+        entradaPeriodo = self.contaService.get_entradaPeriodo(dtaInicialFormat,dtaFinalFormat)
+        self.inicializar_valores()
+        self.saida_periodo()
+        self.saldo_periodo()
+        self.totalizador_Contas()
+        self.get_valoresGrafico()
+        self.view.lbl_EntradaValor.config(text=f"R$ {entradaPeriodo}")
+
+    def saida_periodo(self):
+        dtaInicial = self.view.entry_data_inicial.get_date()
+        dtaFinal = self.view.entry_data_final.get_date()
+
+        dtaInicialFormat = dtaInicial.strftime('%Y-%m-%d')
+        dtaFinalFormat = dtaFinal.strftime('%Y-%m-%d')
+
+        saidaPeriodo = self.contaService.get_SaidaPeriodo(dtaInicialFormat,dtaFinalFormat)
+        self.view.lbl_SaidaValor.config(text=f"R$ {saidaPeriodo}")
+
+    def saldo_periodo(self):
+        dtaInicial = self.view.entry_data_inicial.get_date()
+        dtaFinal = self.view.entry_data_final.get_date()
+
+        dtaInicialFormat = dtaInicial.strftime('%Y-%m-%d')
+        dtaFinalFormat = dtaFinal.strftime('%Y-%m-%d')
+
+        entradaPeriodo = self.contaService.get_entradaPeriodo(dtaInicialFormat,dtaFinalFormat)
+        saidaPeriodo = self.contaService.get_SaidaPeriodo(dtaInicialFormat,dtaFinalFormat)
+
+        saldoPeriodo = entradaPeriodo - saidaPeriodo
+        self.view.lbl_saldoPeriodoValor.config(text=f"R$ {saldoPeriodo}")
+    
+    def carregar_contas_saldos(self):
+     
+        return self.contaService.get_SaldoContas()
+
+    def abrir_categoria(self):
+
+        categoria_window = tk.Toplevel(self.view.root)
+        categoria_window.title("Cadastro de Categoria")
+        CadastroCategoriaController(categoria_window)
+    
+    def abrir_conta(self):
+
+        categoria_window = tk.Toplevel(self.view.root)
+        categoria_window.title("Cadastro de Conta")
+        CadastroContaController(categoria_window)
+    
+    def abrir_transacao(self):
+
+        categoria_window = tk.Toplevel(self.view.root)
+        categoria_window.title("Cadastro de Transação")
+        CadastroTransacaoController(categoria_window)
+
 class CadastroCategoriaController:
     def __init__(self, root):
         self.view = CadastroCategoriaView(root)
@@ -110,42 +145,42 @@ class CadastroCategoriaController:
         self.view.exibir_categorias(categorias)
 
     def cadastrar_categoria(self):
-        descricao = self.view.entry_categoria.get().strip()  # Obter descrição da categoria e remover espaços em branco
-        if descricao:  # Verificar se a descrição não é vazia
-            if not self.categoria_transacao.existe_categoria(descricao):  # Verificar se a categoria já existe
+        descricao = self.view.entry_categoria.get().strip()  
+        if descricao:  
+            if not self.categoria_transacao.existe_categoria(descricao):  
                 self.categoria_transacao.inserir_categoria(descricao)
                 self.carregar_categorias()
-                # Exibir messagebox de sucesso
+              
                 messagebox.showinfo("Sucesso", "Categoria salva com sucesso!")
-                self.view.entry_categoria.delete("0", "end")  # Limpar o Entry após salvar
+                self.view.entry_categoria.delete("0", "end") 
             else:
-                # Exibir messagebox de erro se a categoria já existir
+                
                 messagebox.showerror("Erro", "Esta categoria já existe.")
         else:
-            # Exibir messagebox de erro se a descrição estiver vazia
+            
             messagebox.showerror("Erro", "A descrição da categoria não pode ser vazia.")
 
     def excluir_categoriaController(self):
         id_categoria = self.view.obter_id_selecionado()
 
-        # Verificar se um item está selecionado
+       
         if id_categoria:
-            # Perguntar ao usuário se tem certeza
+            
             resposta = messagebox.askyesno("Confirmação", "Tem certeza que deseja excluir esta categoria?")
             if resposta:
                 self.categoria_transacao.excluir_categoria(id_categoria)
                 self.carregar_categorias()
-                # Exibir messagebox de sucesso
+                
                 messagebox.showinfo("Sucesso", "Categoria excluída com sucesso!")
         else:
-            # Nenhum item selecionado, exiba uma mensagem de aviso
+            
             messagebox.showwarning("Aviso", "Selecione uma categoria para excluir.")
 
     def atualizar_categoria(self):
         id_categoria = self.view.obter_id_selecionado()
         nova_descricao = self.view.entry_categoria.get()
 
-        # Verifica se a descrição não está vazia antes de prosseguir
+       
         if nova_descricao.strip() == "":
             messagebox.showwarning("Aviso", "A descrição não pode estar vazia.")
             return
@@ -153,30 +188,96 @@ class CadastroCategoriaController:
         self.categoria_transacao.atualizar_categoria(id_categoria, nova_descricao)
         self.carregar_categorias()
 
-        # Exibe uma mensagem de sucesso
+       
         messagebox.showinfo("Sucesso", "Categoria atualizada com sucesso!")
 
     def exibir_descricao_selecionada(self, event):
-        # Função chamada quando um item na Treeview é clicado
+        
         item_selecionado = self.view.tree.selection()
         if item_selecionado:
-            # Obtém a descrição do item selecionado e a exibe no entry
+          
             descricao = self.view.tree.item(item_selecionado)['values'][1]
-            self.view.entry_categoria.delete(0, tk.END)  # Limpa o entry
-            self.view.entry_categoria.insert(0, descricao)  # Insere a descrição no entry
-        
+            self.view.entry_categoria.delete(0, tk.END)  
+            self.view.entry_categoria.insert(0, descricao)    
+
 class CadastroTransacaoController:
     def __init__(self, root):
         self.view = CadastroTransacaoView(root)
         self.categoriaTrans = CategoriaTransacao("Nome")
-        categorias = self.categoriaTrans.get_categoriaComboBox()
+        self.comboConta = ContaFinanceira("nome", "saldo_inicial", "usuario", "datacriacao")
+        contas = self.comboConta.carregar_contasCmbBox()
+        self.comboContaValores = self.comboConta.carregar_contasCmbBox()
+        combobox_categoria = self.categoriaTrans.get_categoriaComboBox()
+        self.view.combobox_categoria['values'] = combobox_categoria
+        self.view.cmbContas['values'] = contas
+        self.view.btn_salvar.config(command = self.cadastrar_transacao)
+        self.view.btn_excluir.config(command = self.excluir_transacao)
+        self.view.btn_atualizar.config(command = self.atualizar_transacao)
+        self.transacao_service = Transacao( "valor", "data", "conta", "categoria", "tipo_transacao")
+        transacoes = self.transacao_service.carregar_transacoes()
+        self.view.exibir_transacoes(transacoes)
+        self.view.entry_tipoTrans['values'] = ['ENTRADA','SAIDA']
         
+    def cadastrar_transacao(self):
         
-  
-    #def listar_transacao(self):
-    #def cadastrar_transacao(self):
-    #def atualizar_transacao(self):
-    #def excluir_transacao(self):
+        valor = float(self.view.entry_valor.get())  
+
+        data_objeto = self.view.entry_dtaTransacao.get_date()
+        data_formatada = data_objeto.strftime('%Y-%m-%d')
+        categoria = self.view.combobox_categoria.get()
+        tipo_transacao = self.view.entry_tipoTrans.get()
+        conta = self.view.cmbContas.get()
+
+        
+        self.transacao_service.create_transacao(tipo_transacao,valor,data_formatada,categoria,conta)
+
+        transacoes = self.transacao_service.carregar_transacoes()
+        self.view.exibir_transacoes(transacoes)
+       
+        messagebox.showinfo("Sucesso", "Transação adicionada com sucesso!")
+        self.limpar_campos()
+        self.comboConta.get_SaldoContas()
+
+    def excluir_transacao(self):
+       
+        id_transacao = self.view.obter_id_selecionado()
+
+        self.transacao_service.delete_transacao(id_transacao)
+
+        transacoes = self.transacao_service.carregar_transacoes()
+        self.view.exibir_transacoes(transacoes)
+
+        messagebox.showinfo("Sucesso", "Transação excluida com sucesso!")
+        self.limpar_campos()
+
+    def limpar_campos(self):
+   
+        self.view.entry_valor.delete(0, tk.END)
+
+        self.view.combobox_categoria.set('')
+        
+        self.view.cmbContas.set('')
+
+        self.view.entry_tipoTrans.set('')
+
+    def atualizar_transacao(self):
+      
+        id_transacao =  self.view.obter_id_selecionado()
+        
+        valor = float(self.view.entry_valor.get())  
+        data_objeto = self.view.entry_dtaTransacao.get_date()
+        data_formatada = data_objeto.strftime('%Y-%m-%d')
+        categoria = self.view.combobox_categoria.get()
+        tipo_transacao = self.view.entry_tipoTrans.get()
+        conta = self.view.cmbContas.get()
+
+        self.transacao_service.update_transacao(id_transacao,tipo_transacao,valor,data_formatada,categoria,conta)
+
+        transacoes = self.transacao_service.carregar_transacoes()
+        self.view.exibir_transacoes(transacoes)
+
+        messagebox.showinfo("Sucesso", "Transação adicionada com sucesso!")
+        self.limpar_campos()
 
 class CadastroContaController:
     def __init__(self, root):
@@ -198,28 +299,28 @@ class CadastroContaController:
         saldo = self.view.entry_ContaSaldo.get().strip()
         descricao = self.view.entry_ContaDesc.get().strip()
 
-        # Validar campos vazios
+        
         if not nome or not saldo or not descricao:
             messagebox.showerror("Erro", "Preencha todos os campos antes de salvar.")
             return
 
-        # Verificar se já existe uma conta com o mesmo nome
+      
         if self.contaFinanceira.conta_existente(nome):
             messagebox.showerror("Erro", "Já existe uma conta com esse nome.")
             return
 
-        # Chamar método do model para salvar a conta
+        
         self.contaFinanceira.inserir_conta(nome, saldo, descricao, 1)
 
-        # Carregar contas após salvar
+       
         self.carregar_contas()
 
-        # Limpar dados após salvar
+       
         self.view.entry_Conta.delete(0, "end")
         self.view.entry_ContaSaldo.delete(0, "end")
         self.view.entry_ContaDesc.delete(0, "end")
 
-        # Exibir messagebox de sucesso
+        
         messagebox.showinfo("Sucesso", "Conta salva com sucesso!")
         
 
@@ -230,7 +331,7 @@ class CadastroContaController:
         descricao = self.view.entry_ContaDesc.get().strip()
 
        
-        if nome and saldo and descricao:  # Verificar se nenhum campo está vazio
+        if nome and saldo and descricao: 
                 self.contaFinanceira.atualizar_conta(id_conta, nome, saldo, descricao)
                 self.carregar_contas()
 
@@ -243,35 +344,33 @@ class CadastroContaController:
                 messagebox.showerror("Erro", "Todos os campos devem ser preenchidos.")
     
     def excluir_conta(self):
-        # Chamar método do model para excluir a conta
+       
         resposta = messagebox.askquestion("Confirmação", "Tem certeza que deseja excluir esta conta?")
 
         if resposta == "yes":
-                # Chamar método do controller para excluir a conta
+               
 
                 id_conta = self.view.id_selecionado
         
                 self.contaFinanceira.excluir_conta(id_conta)
 
-                # Limpar dados após excluir
+                
                 self.view.entry_Conta.delete(0, "end")
                 self.view.entry_ContaSaldo.delete(0, "end")
                 self.view.entry_ContaDesc.delete(0, "end")
 
-                # Atualizar a exibição das contas na Treeview
+                
                 self.carregar_contas()
 
-                # Exibir messagebox de sucesso
+                
                 messagebox.showinfo("Sucesso", "Conta excluída com sucesso!")
         else:
-            # Exibir messagebox de erro se nenhum item estiver selecionado
-            messagebox.showerror("Erro", "Selecione uma conta para excluir.")
-    
+           
+            messagebox.showerror("Erro", "Selecione uma conta para excluir.")    
+
 class CadastroUsuarioController:
     def __init__(self, root):
         self.view = CadastroUsuarioView(root)
         #self.view.botao_cadastrar.config(command=self.cadastrar_usuario)
      
     #def cadastrar_usuario(self):
-   
-       
